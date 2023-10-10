@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pwned password checker</title>
+</head>
+<body>
+    <h2>You can check if your password was leakaged before via https://api.pwnedpasswords.com/range/</h2>
+    <input type="password" id="password" />
+    <input type="button" id="button" value="submit" />
+    <div id="sha1"></div>
+    <div id="result"></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script src="sha1.js"></script>
+    <script>
+        $(function(){
+            $("#button").on("click", function(){
+                var sha = sha1($("#password").val()).toUpperCase();
+                console.log(sha);
+                var prefix = sha.substring(0,5);
+                var suffix = sha.substring(5,sha.length);
+                console.log(prefix);
+                console.log(suffix);
+                $("#sha1").html("sha1="+sha+"(prefix="+prefix+" suffix="+suffix+")");
+
+                $.ajax({
+                    url : "https://api.pwnedpasswords.com/range/" + prefix
+                }).done(function(response){
+                    var hashes = response.split('\n');
+                    var breached = false;
+                    //console.log("111:",hashes);
+
+                    for(let i=0; i < hashes.length; i++){
+                        var hash = hashes[i];
+                        //console.log("222:",hash);
+                        var h = hash.split(':');
+
+                        if (h[0] == suffix){
+                            $("#result").html("the password has been breached " + h[1] + "times. you also can see the all hash list https://api.pwnedpasswords.com/range/{prefix}");
+                            breached = true;
+                            break;
+                        }
+                    }
+                    //console.log("h:",h);
+                    if(!breached){
+                        $("#result").html("the password has not been breached");
+                    }
+
+
+
+                });
+            });
+
+        });
+    </script>
+    
+</body>
+</html>
